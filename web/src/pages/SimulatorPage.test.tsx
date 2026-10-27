@@ -28,11 +28,25 @@ describe('SimulatorPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Run simulation' }));
 
     expect(api.startSimulation).toHaveBeenCalledWith(expect.objectContaining({ seed: 7, resetData: true,
-      faultRates: { DUPLICATE_CALLBACK: 0.025, MISSING_CALLBACK: 0.005 } }));
+      bankCutoffDate: '2099-12-31', faultRates: { DUPLICATE_CALLBACK: 0.025, MISSING_CALLBACK: 0.005 } }));
     await waitFor(() => expect(screen.getByTestId('sim-state')).toHaveTextContent('Completed'));
     await userEvent.click(screen.getByRole('button', { name: 'Reconcile now' }));
     expect(await screen.findByTestId('gt-overall')).toHaveTextContent('Precision 100.00% · Recall 100.00% over 60 injected faults');
     expect(api.groundTruth).toHaveBeenCalledWith('sim-1');
+  });
+
+  it('can stop bank statements today instead of delivering all of them', async () => {
+    const api = fakeApi({
+      simulatorDefaults: jest.fn().mockResolvedValue({ faultRates: { MISSING_CALLBACK: 0.005 } }),
+      startSimulation: jest.fn().mockResolvedValue(status('COMPLETED')),
+    });
+    renderPage(<SimulatorPage pollMs={5} />, { api, role: 'ADMIN' });
+    await screen.findByLabelText('MISSING_CALLBACK rate');
+    await userEvent.click(screen.getByRole('checkbox', { name: /Deliver every bank statement/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Run simulation' }));
+    const body = api.startSimulation.mock.calls[0][0];
+    expect(body.bankCutoffDate).toBeUndefined();
+    expect(body.startDate).toBeUndefined();
   });
 
   it('validates fault rates before calling the API', async () => {

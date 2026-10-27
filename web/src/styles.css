@@ -99,3 +99,4 @@ table.data tbody tr:hover { background: var(--chip); }
   .kpis { grid-template-columns: 1fr; }
   .kpi-value { font-size: 1.35rem; }
 }
+.check { font-size: .85rem; color: var(--text); align-items: flex-start; }

@@ -14,6 +14,7 @@ export function SimulatorPage({ pollMs = 1000 }: { pollMs?: number }) {
   const [perDay, setPerDay] = useState('2000');
   const [merchants, setMerchants] = useState('5');
   const [rates, setRates] = useState<Record<string, string>>({});
+  const [exact, setExact] = useState(true);
   const [status, setStatus] = useState<SimRunStatus | null>(null);
   const [run, setRun] = useState<RunSummary | null>(null);
   const [gt, setGt] = useState<GroundTruthReport | null>(null);
@@ -58,8 +59,16 @@ export function SimulatorPage({ pollMs = 1000 }: { pollMs?: number }) {
     }
     setBusy(true);
     try {
-      const s = await api.startSimulation({ seed: Number(seed), days: Number(days), paymentsPerDay: Number(perDay),
-        merchants: Number(merchants), faultRates, resetData: true });
+      const body: Record<string, unknown> = { seed: Number(seed), days: Number(days), paymentsPerDay: Number(perDay),
+        merchants: Number(merchants), faultRates, resetData: true };
+      if (exact) {
+        // Shift the window back so every statement (incl. the 6 trailing days) is already in the past.
+        const start = new Date();
+        start.setDate(start.getDate() - Number(days) - 7);
+        body.startDate = start.toISOString().slice(0, 10);
+        body.bankCutoffDate = '2099-12-31';
+      }
+      const s = await api.startSimulation(body);
       setStatus(s);
       poll(s.simRunId);
     } catch (e) {
@@ -93,6 +102,10 @@ export function SimulatorPage({ pollMs = 1000 }: { pollMs?: number }) {
           <label>Payments / day<input value={perDay} onChange={(e) => setPerDay(e.target.value)} inputMode="numeric" /></label>
           <label>Merchants<input value={merchants} onChange={(e) => setMerchants(e.target.value)} inputMode="numeric" /></label>
         </div>
+        <label className="inline check">
+          <input type="checkbox" checked={exact} onChange={(e) => setExact(e.target.checked)} />
+          Deliver every bank statement (grace windows expire: exact ground-truth comparison). Untick to stop statements today, like a live day.
+        </label>
         <table className="mini rates" aria-label="fault rates">
           <thead><tr><th>Fault</th><th>Rate (%)</th></tr></thead>
           <tbody>

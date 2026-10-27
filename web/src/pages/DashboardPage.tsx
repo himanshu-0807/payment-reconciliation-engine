@@ -11,6 +11,12 @@ function today(): string {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
+function dayBefore(iso: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
 export function DashboardPage() {
   const { api, can } = useAuth();
   const [asOf, setAsOf] = useState(today());
@@ -71,7 +77,7 @@ export function DashboardPage() {
         <>
           <div className="kpis">
             <Card className="kpi danger"><div className="kpi-label">Money at risk</div><div className="kpi-value" data-testid="money-at-risk">{formatPaise(summary.moneyAtRiskMinor)}</div><div className="kpi-sub">{summary.openCount.toLocaleString('en-IN')} open exceptions</div></Card>
-            <Card className="kpi"><div className="kpi-label">New (last 2 days)</div><div className="kpi-value">{formatPaise(summary.newAtRiskMinor)}</div><div className="kpi-sub">business dates ≥ {summary.referenceDate}-1d</div></Card>
+            <Card className="kpi"><div className="kpi-label">New (last 2 days)</div><div className="kpi-value">{formatPaise(summary.newAtRiskMinor)}</div><div className="kpi-sub">business dates {dayBefore(summary.referenceDate)} and {summary.referenceDate}</div></Card>
             <Card className="kpi"><div className="kpi-label">Expected in transit</div><div className="kpi-value">{formatPaise(summary.expectedInTransitMinor)}</div><div className="kpi-sub">{summary.pendingExpectedCount} credits inside grace window</div></Card>
             <Card className="kpi"><div className="kpi-label">Adjustments to approve</div><div className="kpi-value">{summary.adjustmentsPendingApproval}</div><div className="kpi-sub"><Link to="/exceptions?exceptionClass=AMOUNT_MISMATCH&status=OPEN">review</Link></div></Card>
           </div>
@@ -82,11 +88,12 @@ export function DashboardPage() {
                   <LineChart data={trendData} margin={{ left: 8, right: 8, top: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--grid)" />
                     <XAxis dataKey="date" fontSize={12} />
-                    <YAxis tickFormatter={formatPaiseCompact} fontSize={12} width={64} />
+                    <YAxis yAxisId="risk" tickFormatter={formatPaiseCompact} fontSize={12} width={64} />
+                    <YAxis yAxisId="transit" orientation="right" tickFormatter={formatPaiseCompact} fontSize={12} width={64} />
                     <Tooltip formatter={(v: number) => formatPaise(v)} />
                     <Legend />
-                    <Line type="monotone" dataKey="atRisk" name="At risk" stroke="var(--danger)" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="inTransit" name="Expected in transit" stroke="var(--accent)" strokeDasharray="4 3" dot={false} />
+                    <Line yAxisId="risk" type="monotone" dataKey="atRisk" name="At risk (left axis)" stroke="var(--danger)" strokeWidth={2} dot={{ r: 2 }} />
+                    <Line yAxisId="transit" type="monotone" dataKey="inTransit" name="Expected in transit (right axis)" stroke="var(--accent)" strokeDasharray="4 3" dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
