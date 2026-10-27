@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: recon-service
-          image: recon/recon-serviceocal
+          image: recon/recon-service:local
           imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 8080 }]
           envFrom:

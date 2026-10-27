@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: bank-sim
-          image: recon/bank-simocal
+          image: recon/bank-sim:local
           imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 8082 }]
           envFrom:

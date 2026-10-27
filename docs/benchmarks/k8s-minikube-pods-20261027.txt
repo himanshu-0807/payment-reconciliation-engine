@@ -1,0 +1,13 @@
+bank-sim-854d68c9d8-njsx5 1/1 Running 0
+gateway-sim-557469cb77-tfqxs 1/1 Running 0
+kafka-0 1/1 Running 0
+localstack-67876b8bf7-n8ssn 1/1 Running 0
+postgres-0 1/1 Running 0
+recon-service-757d9b5646-f5dw4 1/1 Running 0
+web-59498d9bc7-69vx8 1/1 Running 0
+Client Version: v1.36.1
+Kustomize Version: v5.8.1
+
+ground-truth on minikube (API port-forwarded): scripts/ground-truth.sh 3 5000 7
+15030 entities, 856 injected faults, overall precision 1.0 recall 1.0, no mismatches
+minikube v1.34.0, Kubernetes v1.31.0, docker driver, 6 cpus / 5800 MiB

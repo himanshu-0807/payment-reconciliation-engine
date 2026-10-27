@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: gateway-sim
-          image: recon/gateway-simocal
+          image: recon/gateway-sim:local
           imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 8081 }]
           envFrom:
