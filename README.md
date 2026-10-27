@@ -17,9 +17,9 @@ All data is synthetic, everything runs locally and for free, and every number be
 
 ## Video walkthrough
 
-[![Walkthrough: click to watch the full video](docs/video/walkthrough.gif)](docs/video/walkthrough.mp4)
+[![Walkthrough: click to download the full video](docs/video/walkthrough.gif)](https://github.com/himanshu-0807/payment-reconciliation-engine/raw/main/docs/video/walkthrough.mp4)
 
-The GIF above plays at 4× speed. **[Watch the full walkthrough (MP4, 3 min 33 s, 10 MB)](docs/video/walkthrough.mp4)**.
+The GIF above plays at 4× speed. **[Download the full walkthrough (MP4, 3 min 33 s, 10 MB)](https://github.com/himanshu-0807/payment-reconciliation-engine/raw/main/docs/video/walkthrough.mp4)**; GitHub downloads repository videos rather than playing them in the browser.
 It was recorded live against `docker compose up`, with on-screen captions for each step:
 
 1. JWT login: a wrong password is rejected, then roles (analyst, supervisor, admin)
