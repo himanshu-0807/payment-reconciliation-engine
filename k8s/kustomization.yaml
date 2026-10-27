@@ -1,0 +1,22 @@
+# kubectl create namespace recon
+# kubectl -n recon create secret generic recon-secrets --from-env-file=../.env
+# kubectl apply -k k8s/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: recon
+resources:
+  - namespace.yaml
+  - config.yaml
+  - postgres.yaml
+  - kafka.yaml
+  - localstack.yaml
+  - bank-sim.yaml
+  - gateway-sim.yaml
+  - recon-service.yaml
+  - web.yaml
+configMapGenerator:
+  - name: localstack-init
+    files:
+      - init-s3.sh=localstack-init-s3.sh  # copy of infra/localstack/init-s3.sh; kustomize cannot read outside k8s/
+generatorOptions:
+  disableNameSuffixHash: true

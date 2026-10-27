@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bank-sim
+spec:
+  selector: { app: bank-sim }
+  ports: [{ port: 8082, targetPort: 8082 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bank-sim
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: bank-sim }
+  template:
+    metadata:
+      labels: { app: bank-sim }
+    spec:
+      containers:
+        - name: bank-sim
+          image: recon/bank-simocal
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8082 }]
+          envFrom:
+            - configMapRef: { name: recon-config }
+            - secretRef: { name: recon-secrets }
+          env:
+            - { name: SERVER_PORT, value: "8082" }
+            - { name: JAVA_OPTS, value: "-Xmx1g -XX:+ExitOnOutOfMemoryError" }
+
+          readinessProbe:
+            httpGet: { path: /actuator/health/readiness, port: 8082 }
+            initialDelaySeconds: 15
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /actuator/health/liveness, port: 8082 }
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 250m, memory: 512Mi }
+            limits: { memory: 1280Mi }

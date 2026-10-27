@@ -1,0 +1,40 @@
+# LocalStack Community, S3 only. The init hook creates the bucket.
+apiVersion: v1
+kind: Service
+metadata:
+  name: localstack
+spec:
+  selector: { app: localstack }
+  ports: [{ port: 4566, targetPort: 4566 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: localstack
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: localstack }
+  template:
+    metadata:
+      labels: { app: localstack }
+    spec:
+      containers:
+        - name: localstack
+          image: localstack/localstack:3.8.1
+          ports: [{ containerPort: 4566 }]
+          env:
+            - { name: SERVICES, value: s3 }
+            - { name: AWS_DEFAULT_REGION, value: ap-south-1 }
+            - { name: S3_BUCKET, value: recon-data }
+          readinessProbe:
+            exec: { command: ["sh", "-c", "curl -fs http://localhost:4566/_localstack/init/ready | grep -q '\"completed\": true'"] }
+            periodSeconds: 5
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { memory: 1Gi }
+          volumeMounts:
+            - { name: init, mountPath: /etc/localstack/init/ready.d }
+      volumes:
+        - name: init
+          configMap: { name: localstack-init, defaultMode: 0755 }

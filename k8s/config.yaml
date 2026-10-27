@@ -1,0 +1,17 @@
+# Non-secret settings shared by the Java services. Secrets (DB password, JWT_SECRET, demo user
+# passwords, placeholder AWS keys) come from the recon-secrets Secret created from your .env.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: recon-config
+data:
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  STORAGE_TYPE: s3
+  STORAGE_S3_ENDPOINT: http://localstack:4566
+  STORAGE_S3_BUCKET: recon-data
+  STORAGE_S3_REGION: ap-south-1
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  GATEWAY_SIM_URL: http://gateway-sim:8081
+  BANK_SIM_URL: http://bank-sim:8082
+  BANK_SOAP_URL: http://bank-sim:8082/ws
