@@ -19,20 +19,41 @@ All data is synthetic, everything runs locally and for free, and every number be
 
 [![Walkthrough: click to download the full video](docs/video/walkthrough.gif)](https://github.com/himanshu-0807/payment-reconciliation-engine/raw/main/docs/video/walkthrough.mp4)
 
-The GIF above plays at 4× speed. **[Download the full walkthrough (MP4, 3 min 33 s, 10 MB)](https://github.com/himanshu-0807/payment-reconciliation-engine/raw/main/docs/video/walkthrough.mp4)**; GitHub downloads repository videos rather than playing them in the browser.
-It was recorded live against `docker compose up`, with on-screen captions for each step:
+The GIF above is a silent preview at 6× speed.
+**[Download the full narrated walkthrough (MP4, 6 min 54 s, 21 MB, with voice-over and English subtitles)](https://github.com/himanshu-0807/payment-reconciliation-engine/raw/main/docs/video/walkthrough.mp4)**.
+GitHub downloads repository videos rather than playing them in the browser. The subtitles are also
+available as [`walkthrough.srt`](docs/video/walkthrough.srt).
 
-1. JWT login: a wrong password is rejected, then roles (analyst, supervisor, admin)
-2. Failure simulator: set seed, volume and fault rates; callbacks go to Kafka, files to S3; reconcile; **engine vs ground truth: 100% precision and recall per fault type**
-3. Money-at-risk dashboard: KPIs, 14-day trend, breakdown by exception type, aging buckets, auto-fixes
-4. Ops queue: filters (type, minimum amount, sort), server-side pagination
-5. Every exception class with ledger, gateway and bank records side by side: missing in ledger, missing in gateway, missing in bank (live SOAP check: NOT_FOUND), duplicate bank credit (SOAP: DUPLICATE_CREDIT), real amount mismatch, orphan credit, late settlement auto-resolved, duplicate callback deduped
-6. Analyst: cannot run reconciliation or approve adjustments; works a case (assign, comment, resolve) and the audit trail records each step
-7. Supervisor approves a fee adjustment above ₹0.50, then re-runs reconciliation, which changes nothing (idempotent)
-8. A live day with bank statements stopping today: grace window, "expected in transit" vs money at risk, `PENDING_EXPECTED` cases
-9. REST API in Swagger UI and the bank's SOAP WSDL
+It was recorded live against `docker compose up`, with a voice-over explaining each step and
+on-screen captions:
 
-Re-record it with `cd web && node scripts/demo-video.mjs && ../scripts/make-video.sh`; the stack must be running and the demo passwords exported from `.env`.
+| Time | Chapter |
+|---:|---|
+| 0:00 | What the engine does |
+| 0:21 | JWT login: a wrong password is rejected; roles (analyst, supervisor, admin) |
+| 0:39 | Failure simulator: seed, volume and fault rates; callbacks go to Kafka, files to S3; reconcile; **engine vs ground truth: 100% precision and recall per fault type** |
+| 1:50 | Money-at-risk dashboard: KPIs, 14-day trend, breakdown by exception type, aging buckets, auto-fixes |
+| 2:26 | Ops queue: filters (type, minimum amount, sort) and server-side pagination |
+| 2:45 | Every exception class with ledger, gateway and bank records side by side: missing in ledger, missing in gateway, missing in bank (live SOAP check: NOT_FOUND), duplicate bank credit (SOAP: DUPLICATE_CREDIT), real amount mismatch, orphan credit, late settlement auto-resolved, duplicate callback deduped |
+| 4:15 | Analyst: cannot run reconciliation or approve adjustments; works a case (assign, comment, resolve), with each step in the audit trail |
+| 5:05 | Supervisor approves a fee adjustment above ₹0.50, then re-runs reconciliation, which changes nothing (idempotent) |
+| 5:27 | A live day with bank statements stopping today: the grace window, "expected in transit" vs money at risk, `PENDING_EXPECTED` cases |
+| 5:58 | REST API in Swagger UI and the bank's SOAP WSDL |
+| 6:21 | What was measured |
+
+The voice-over is macOS's built-in "Samantha" text-to-speech voice. The narration script is in
+[`web/scripts/narration.json`](web/scripts/narration.json). To rebuild the video, with the stack
+running and the demo passwords exported from `.env`:
+
+```sh
+cd web
+node scripts/narrate.mjs      # voice clips (macOS `say`; existing clips in docs/video/raw/audio/ are reused)
+node scripts/demo-video.mjs   # records the walkthrough, holding each scene for its narration
+../scripts/make-video.sh      # mixes the voice in (-16 LUFS), adds subtitles, writes the MP4 and the GIF
+```
+
+To use a different voice, for example one generated with ElevenLabs, put one clip per scene in
+`docs/video/raw/audio/<scene-id>.mp3` (or `.wav`) and run the same three commands.
 
 ![Dashboard](docs/img/02-dashboard.png)
 

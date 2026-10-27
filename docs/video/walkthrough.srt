@@ -1,0 +1,256 @@
+1
+00:00:00,000 --> 00:00:06,464
+This is a walkthrough of the payment reconciliation engine, recorded live against the full Docker Compose stack.
+
+2
+00:00:06,504 --> 00:00:14,245
+For every payment it compares three record sets: the merchant's ledger, the payment gateway's settlement file, and the bank statement.
+
+3
+00:00:14,285 --> 00:00:21,097
+It finds every mismatch, explains the cause, fixes the safe cases automatically, and keeps track of the money at risk.
+
+4
+00:00:21,667 --> 00:00:22,653
+Security first.
+
+5
+00:00:22,693 --> 00:00:29,764
+The API issues JSON web tokens, and every endpoint checks the user's role: analyst, supervisor or admin.
+
+6
+00:00:29,804 --> 00:00:36,054
+A wrong password is rejected with the same structured error format that every endpoint uses.
+
+7
+00:00:36,094 --> 00:00:38,174
+Now let's sign in as the admin.
+
+8
+00:00:39,718 --> 00:00:45,259
+This is the failure simulator: a fake payment gateway and a fake bank that misbehave on purpose.
+
+9
+00:00:45,299 --> 00:00:56,710
+From one seed it generates payments over any number of days and injects eleven kinds of fault, such as lost callbacks, duplicate webhooks, late settlements, fee differences and orphan bank credits.
+
+10
+00:00:56,750 --> 00:01:01,361
+I'll raise the volume to three thousand payments a day and bump two fault rates.
+
+11
+00:01:01,853 --> 00:01:11,491
+When it runs, the gateway publishes webhook callbacks to Kafka, including duplicates and out-of-order events, and writes a settlement file per day to S3 on LocalStack.
+
+12
+00:01:11,531 --> 00:01:17,054
+The bank simulator regenerates the same world from the same seed and writes the bank statements.
+
+13
+00:01:17,094 --> 00:01:20,879
+A ground-truth file records exactly which payment got which fault.
+
+14
+00:01:21,371 --> 00:01:22,391
+Now we reconcile.
+
+15
+00:01:22,431 --> 00:01:34,178
+The engine waits for the Kafka ledger consumer to catch up, ingests the settlement files and statements idempotently, then reconciles every business date and merchant partition in parallel.
+
+16
+00:01:34,669 --> 00:01:39,248
+And here is the proof. The engine's findings are compared with the ground truth.
+
+17
+00:01:39,288 --> 00:01:48,082
+Every injected fault was found with the expected class, and no clean payment was flagged: one hundred percent precision and recall, for every fault type.
+
+18
+00:01:50,205 --> 00:01:55,400
+The dashboard leads with money at risk: the total amount still unresolved in the ops queue.
+
+19
+00:01:55,440 --> 00:02:01,209
+Every amount is stored as integer paise, never floating point, and shown in Indian number formatting.
+
+20
+00:02:01,249 --> 00:02:04,028
+Items the engine fixed by itself are not counted.
+
+21
+00:02:04,519 --> 00:02:09,546
+Next to it is the fourteen-day trend by business date, and the breakdown by exception type.
+
+22
+00:02:09,586 --> 00:02:12,275
+Clicking a type opens the queue already filtered.
+
+23
+00:02:12,767 --> 00:02:24,980
+Below, the aging buckets show how long money has been at risk, and this panel shows what the engine handled by itself: deduplicated callbacks, settlements that arrived within grace, and small fee adjustments.
+
+24
+00:02:26,724 --> 00:02:30,711
+The ops queue lists every exception, largest amount at risk first.
+
+25
+00:02:33,202 --> 00:02:39,072
+Filters narrow it down. Here, amount mismatches of at least a hundred rupees, oldest first.
+
+26
+00:02:39,112 --> 00:02:43,554
+Pagination happens on the server, so this scales to millions of rows.
+
+27
+00:02:45,448 --> 00:02:48,483
+Each exception opens with the three records side by side.
+
+28
+00:02:48,523 --> 00:02:57,979
+This one is missing in the ledger: the gateway settled it and the bank credited it, but the merchant never received the callback, so its own books don't know the customer paid.
+
+29
+00:02:59,847 --> 00:03:08,391
+Missing in gateway is the opposite: the merchant recorded the payment, but it never appeared in any settlement file, so no money was ever going to arrive.
+
+30
+00:03:10,275 --> 00:03:15,842
+Missing in bank: the gateway says it settled, the grace window has expired, and nothing arrived.
+
+31
+00:03:15,882 --> 00:03:20,572
+Asking the bank's SOAP service live confirms it has no credit for this reference.
+
+32
+00:03:22,453 --> 00:03:26,841
+A duplicate bank credit: the same settlement reference was credited twice.
+
+33
+00:03:26,881 --> 00:03:29,654
+The bank's SOAP service confirms the duplicate.
+
+34
+00:03:32,603 --> 00:03:39,828
+A real amount mismatch: the ledger and the gateway disagree by more than the one-rupee tolerance, so a person has to look at it.
+
+35
+00:03:41,716 --> 00:03:47,245
+An orphan credit: money arrived at the bank with a reference that matches nothing in the gateway or the ledger.
+
+36
+00:03:49,134 --> 00:03:50,779
+Some cases close themselves.
+
+37
+00:03:50,819 --> 00:03:58,420
+This settlement arrived after T plus two, but inside the five-day grace window, so a rule resolved it and wrote an audit entry.
+
+38
+00:04:00,310 --> 00:04:03,924
+And here the gateway sent the same webhook several times.
+
+39
+00:04:03,964 --> 00:04:10,205
+The dedupe table, keyed by event id and Kafka position, absorbed the copies, with no money effect.
+
+40
+00:04:15,055 --> 00:04:16,382
+Now the analyst's view.
+
+41
+00:04:16,422 --> 00:04:22,442
+Analysts work the queue, but they can't run reconciliation, read the audit log or approve adjustments.
+
+42
+00:04:22,482 --> 00:04:26,423
+The run button isn't even shown, and the API would refuse the call.
+
+43
+00:04:26,964 --> 00:04:31,297
+Small fee or rounding differences become adjustment journal entries.
+
+44
+00:04:31,337 --> 00:04:37,921
+Up to fifty paise they post automatically. This one is above fifty paise, so it waits for a supervisor.
+
+45
+00:04:38,460 --> 00:04:44,767
+Here the analyst works a missing-in-ledger case: assigns it, adds a comment, and resolves it with a reason.
+
+46
+00:04:51,460 --> 00:04:55,894
+Every step lands in the audit log, which a database trigger keeps append-only.
+
+47
+00:04:55,934 --> 00:04:59,393
+Re-running reconciliation will never overwrite this decision.
+
+48
+00:05:05,191 --> 00:05:08,931
+Signed in as the supervisor, the adjustment can now be approved.
+
+49
+00:05:08,971 --> 00:05:12,120
+That posts the journal entry and closes the exception.
+
+50
+00:05:12,671 --> 00:05:16,004
+Now let's re-run reconciliation over the same dates.
+
+51
+00:05:16,044 --> 00:05:22,297
+Nothing changes: the same result digest, no new exceptions, and the resolved cases stay resolved.
+
+52
+00:05:27,953 --> 00:05:29,175
+Finally, a live day.
+
+53
+00:05:29,215 --> 00:05:35,738
+This time the bank statements stop today, so credits for the newest payments simply haven't arrived yet.
+
+54
+00:05:35,778 --> 00:05:39,524
+They are due by T plus two, and tolerated until T plus five.
+
+55
+00:05:41,957 --> 00:05:47,370
+The dashboard keeps them separate, as expected in transit. They don't count as money at risk yet.
+
+56
+00:05:47,410 --> 00:05:52,204
+They're re-checked on every run, and they escalate to the queue if the window expires.
+
+57
+00:05:52,750 --> 00:05:57,456
+In the queue they show as pending expected, and they leave on their own when the credit arrives.
+
+58
+00:05:58,153 --> 00:06:11,821
+Everything you saw is also available through the REST API, documented with OpenAPI: login, runs, exceptions with filters, case actions, adjustments, the dashboard, the audit log and the simulator.
+
+59
+00:06:12,349 --> 00:06:15,154
+And this is the bank simulator's SOAP contract.
+
+60
+00:06:15,194 --> 00:06:20,723
+Its get settlement status operation is what the exception page calls, through a JAXB client.
+
+61
+00:06:21,217 --> 00:06:22,554
+All of this is measured.
+
+62
+00:06:22,594 --> 00:06:34,139
+At fourteen days of one hundred thousand payments a day, the engine reconciles one point four million entities in under seventeen seconds at parallelism eight, with identical results at any parallelism.
+
+63
+00:06:34,179 --> 00:06:39,129
+Seventy-nine backend tests and thirty-eight frontend tests run green in GitHub Actions.
+
+64
+00:06:39,169 --> 00:06:43,660
+The code, the benchmarks, and the commands to reproduce them are all on GitHub.
+

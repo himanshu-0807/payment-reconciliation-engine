@@ -66,6 +66,12 @@ Working log so the build can be resumed. Every "done" item was run locally on ma
   docker compose (3 min 33 s); scripts/make-video.sh -> docs/video/walkthrough.mp4 (H.264, 10 MB)
   and walkthrough.gif (4x, 9.3 MB), embedded in the README.
 
+- Narrated video: web/scripts/narration.json (31 scenes), narrate.mjs (macOS `say`, voice Samantha;
+  drop-in clips reused), demo-video.mjs holds each scene for its narration and logs timeline.json,
+  mix-video.mjs places each clip at its scene start, loudnorm -16 LUFS, fades, soft subtitles.
+  Measured: 6 min 54 s, 21 MB; caption-to-audio offset < 50 ms; speech onset within 0.6 s of all
+  30 scene changes. ElevenLabs was not reachable from this session (connector not loaded).
+
 ## Next
 - Nothing required. Ideas: docs/DESIGN.md "What I would do next".
 
