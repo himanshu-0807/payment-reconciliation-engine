@@ -10,3 +10,10 @@ spring:
 logging:
   level:
     org.apache.kafka: WARN
+recon:
+  security:
+    jwt-secret: test-only-secret-key-that-is-at-least-32-bytes-long
+    demo-users:
+      analyst-password: analyst-test
+      supervisor-password: supervisor-test
+      admin-password: admin-test

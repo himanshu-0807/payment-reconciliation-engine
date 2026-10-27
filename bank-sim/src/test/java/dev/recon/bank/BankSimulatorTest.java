@@ -41,7 +41,7 @@ class BankSimulatorTest {
     @Test
     void writesOneStatementPerValueDateWithEveryGeneratedCreditAndAnswersSoapLookups() throws Exception {
         SimRunRequest req = new SimRunRequest(99L, START, 3, 2_000, 5, Map.of(
-                FaultType.DUPLICATE_BANK_CREDIT, 0.05, FaultType.DELAYED_SETTLEMENT, 0.05), "test-run");
+                FaultType.DUPLICATE_BANK_CREDIT, 0.05, FaultType.DELAYED_SETTLEMENT, 0.05), "test-run", null);
         BankSimulator.Result result = bank.generate(req);
 
         SimulationConfig config = req.toConfig(START);
@@ -82,6 +82,16 @@ class BankSimulatorTest {
                 .andExpect(xpath("//b:creditCount", NS).evaluatesTo(2));
         client.sendRequest(withPayload(request("UTRDOESNOTEXIST"))).andExpect(noFault())
                 .andExpect(xpath("//b:status", NS).evaluatesTo("NOT_FOUND"));
+    }
+
+    @Test
+    void cutoffStopsStatementsAtTheGivenDate() throws Exception {
+        SimRunRequest req = new SimRunRequest(5L, START, 3, 500, 5, Map.of(), "cutoff-run", START.plusDays(3));
+        BankSimulator.Result result = bank.generate(req);
+        assertThat(result.files()).isEqualTo(3); // value dates start+1 .. start+3
+        assertThat(store.list(ObjectKeys.BANK_PREFIX)).extracting(ObjectStore.ObjectInfo::key)
+                .containsExactly(ObjectKeys.bankFile(START.plusDays(1)), ObjectKeys.bankFile(START.plusDays(2)),
+                        ObjectKeys.bankFile(START.plusDays(3)));
     }
 
     private static StringSource request(String utr) {
