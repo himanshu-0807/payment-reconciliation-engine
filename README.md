@@ -156,8 +156,8 @@ Compose, Kubernetes manifests (kustomize), Terraform (LocalStack only), GitHub A
   so **the manifests are verified on minikube, not on kind**.
 - **Terraform:** `terraform init`, `validate` and `plan` against LocalStack (plan: 5 resources to
   add). It was **never applied**, to LocalStack or to AWS.
-- **CI:** GitHub Actions runs the backend tests, the frontend tests, Terraform/compose/manifest
-  checks, and the Docker image build.
+- **CI:** GitHub Actions runs the backend tests (79), the frontend tests (38), Terraform, compose
+  and manifest checks, and the Docker image build. See the badge above for the latest run.
 
 **Not verified / out of scope:**
 

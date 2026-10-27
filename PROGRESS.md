@@ -56,8 +56,14 @@ Working log so the build can be resumed. Every "done" item was run locally on ma
 - Phase 9: README, DESIGN, BENCHMARKS, API, INTERVIEW_NOTES; Playwright screenshots in docs/img.
   Final clean `mvn verify`: 79 backend tests pass; `npm test`: 38 pass.
 
+- Published: https://github.com/himanshu-0807/payment-reconciliation-engine (public, 10 topics).
+  First CI run failed: CallbackConsumerIT's replay assumed it was alone on the shared Kafka topic
+  (in CI it ran after the other ITs). Fixed by reading to the end offsets and filtering its own
+  records, plus a fixed IT order. CI run 40535040915 on 960144e: all 4 jobs green (79 backend
+  tests, 38 frontend tests, 4 Docker images built).
+
 ## Next
-- Push to GitHub and make CI green.
+- Nothing required. Ideas: docs/DESIGN.md "What I would do next".
 
 ## Known issues
 - A recon-service restart makes the new consumers wait up to the Kafka session timeout (45 s) for
