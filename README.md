@@ -15,6 +15,25 @@ the injected faults instead of eyeballed.
 
 All data is synthetic, everything runs locally and for free, and every number below was measured.
 
+## Video walkthrough
+
+[![Walkthrough: click to watch the full video](docs/video/walkthrough.gif)](docs/video/walkthrough.mp4)
+
+The GIF above plays at 4× speed. **[Watch the full walkthrough (MP4, 3 min 33 s, 10 MB)](docs/video/walkthrough.mp4)**.
+It was recorded live against `docker compose up`, with on-screen captions for each step:
+
+1. JWT login: a wrong password is rejected, then roles (analyst, supervisor, admin)
+2. Failure simulator: set seed, volume and fault rates; callbacks go to Kafka, files to S3; reconcile; **engine vs ground truth: 100% precision and recall per fault type**
+3. Money-at-risk dashboard: KPIs, 14-day trend, breakdown by exception type, aging buckets, auto-fixes
+4. Ops queue: filters (type, minimum amount, sort), server-side pagination
+5. Every exception class with ledger, gateway and bank records side by side: missing in ledger, missing in gateway, missing in bank (live SOAP check: NOT_FOUND), duplicate bank credit (SOAP: DUPLICATE_CREDIT), real amount mismatch, orphan credit, late settlement auto-resolved, duplicate callback deduped
+6. Analyst: cannot run reconciliation or approve adjustments; works a case (assign, comment, resolve) and the audit trail records each step
+7. Supervisor approves a fee adjustment above ₹0.50, then re-runs reconciliation, which changes nothing (idempotent)
+8. A live day with bank statements stopping today: grace window, "expected in transit" vs money at risk, `PENDING_EXPECTED` cases
+9. REST API in Swagger UI and the bank's SOAP WSDL
+
+Re-record it with `cd web && node scripts/demo-video.mjs && ../scripts/make-video.sh`; the stack must be running and the demo passwords exported from `.env`.
+
 ![Dashboard](docs/img/02-dashboard.png)
 
 ## Measured results
@@ -90,6 +109,7 @@ Other scripts in [`scripts/`](scripts/), all POSIX `sh`:
 | `ground-truth.sh [days] [perDay] [seed]` | simulate with every statement delivered, reconcile, and print precision and recall per fault |
 | `benchmark.sh [days] [perDay] [seed]` | the scale benchmark (JSON written to `bench-results/`) |
 | `log-check.sh` | grep/awk summary of service logs: levels, ledger duplicates absorbed, ingestion, runs, stack traces |
+| `make-video.sh` | turns the Playwright walkthrough recording (`web/scripts/demo-video.mjs`) into `docs/video/walkthrough.mp4` and the GIF preview |
 
 Building from source needs Java 21, Maven 3.9 and Node 22: run `mvn verify` (Docker must be running
 for Testcontainers), and `cd web && npm ci && npm test`.
@@ -145,6 +165,8 @@ Compose, Kubernetes manifests (kustomize), Terraform (LocalStack only), GitHub A
 - `npm test`: 38 frontend tests pass; `tsc` reports no errors; `vite build` succeeds.
 - `docker compose up -d --build` brings up all 7 containers healthy, and `scripts/health-check.sh`
   exits 0.
+- The [video walkthrough](docs/video/walkthrough.mp4) was recorded with Playwright against that
+  stack. Every action in it hits the real services; nothing is mocked.
 - `scripts/demo.sh` runs end to end against the compose stack, and the dashboard shows the result
   (screenshots above).
 - The ground-truth and scale numbers in the table above, with raw output in

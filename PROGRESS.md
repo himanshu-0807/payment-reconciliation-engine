@@ -62,6 +62,10 @@ Working log so the build can be resumed. Every "done" item was run locally on ma
   records, plus a fixed IT order. CI run 40535040915 on 960144e: all 4 jobs green (79 backend
   tests, 38 frontend tests, 4 Docker images built).
 
+- Video walkthrough: web/scripts/demo-video.mjs records every use case with Playwright against
+  docker compose (3 min 33 s); scripts/make-video.sh -> docs/video/walkthrough.mp4 (H.264, 10 MB)
+  and walkthrough.gif (4x, 9.3 MB), embedded in the README.
+
 ## Next
 - Nothing required. Ideas: docs/DESIGN.md "What I would do next".
 
