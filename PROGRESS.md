@@ -33,8 +33,13 @@ Working log so the build can be resumed. Every "done" item was run locally on ma
   live run of the 3 jars on compose infra: 5 days x 5000 payments, recon p=8 in 773 ms,
   ground truth precision=recall=1.0 (1407 injected faults, 25,050 entities), SOAP lookup via API.
 
+- Phase 6: React 18 + TypeScript + Vite dashboard (login, money-at-risk KPIs, 14-day trend, breakdown
+  by type, aging, auto-fix summary, exceptions table with filters/pagination, detail with ledger /
+  gateway / bank side by side + assign/comment/resolve/approve/SOAP check, simulator panel with
+  ground-truth table). Recharts. Verified: 37 Jest + RTL tests pass, tsc clean, vite build OK.
+
 ## Next
-- Phase 6: React + TypeScript dashboard with Jest + RTL tests.
+- Phase 7: scale benchmark (14 x 100k), plus re-check of ground-truth / concurrency suites.
 
 ## Known issues
 - (fixed) @KafkaListener(id=...) silently used the listener id as consumer group; the group is now
