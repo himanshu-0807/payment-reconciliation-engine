@@ -49,9 +49,15 @@ Working log so the build can be resumed. Every "done" item was run locally on ma
   verified with kubectl kustomize), GitHub Actions workflow. Verified: `docker compose up -d --build`
   -> health-check.sh exit 0; demo.sh end to end in 8.5 s; ground-truth.sh on compose 7x20k -> 1.0/1.0.
 
+- Phase 8b: kind could not be downloaded (GitHub release downloads throttled to ~1.6 KB/s; resumed
+  files failed checksum). Verified the k8s manifests on minikube v1.34 / Kubernetes 1.31 instead:
+  7/7 pods Ready, demo + ground truth (1.0/1.0) through port-forwards. This also caught image names
+  mangled by shell expansion in the generated manifests (fixed).
+- Phase 9: README, DESIGN, BENCHMARKS, API, INTERVIEW_NOTES; Playwright screenshots in docs/img.
+  Final clean `mvn verify`: 79 backend tests pass; `npm test`: 38 pass.
+
 ## Next
-- Phase 8b: try k8s on kind (kind binary download from GitHub keeps failing here).
-- Phase 9: docs, screenshots (Playwright), push to GitHub, CI green.
+- Push to GitHub and make CI green.
 
 ## Known issues
 - A recon-service restart makes the new consumers wait up to the Kafka session timeout (45 s) for
