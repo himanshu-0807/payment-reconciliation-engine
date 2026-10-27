@@ -1,0 +1,12 @@
+storage:
+  type: local
+  local:
+    root: ${java.io.tmpdir}/recon-it-store
+spring:
+  kafka:
+    consumer:
+      properties:
+        metadata.max.age.ms: 1000
+logging:
+  level:
+    org.apache.kafka: WARN
