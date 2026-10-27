@@ -1,0 +1,30 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: bank-sim
+  threads:
+    virtual:
+      enabled: true
+
+storage:
+  type: ${STORAGE_TYPE:s3}
+  s3:
+    endpoint: ${STORAGE_S3_ENDPOINT:http://localhost:4566}
+    region: ${STORAGE_S3_REGION:ap-south-1}
+    bucket: ${STORAGE_S3_BUCKET:recon-data}
+    access-key: ${AWS_ACCESS_KEY_ID:test}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:test}
+  local:
+    root: ${STORAGE_LOCAL_ROOT:./data/object-store}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
