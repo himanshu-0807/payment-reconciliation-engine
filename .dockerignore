@@ -1,0 +1,7 @@
+**/target
+web
+.git
+data
+logs
+bench-results
+infra/.terraform

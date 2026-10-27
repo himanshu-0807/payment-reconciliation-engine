@@ -2,6 +2,7 @@
 name: recon
 
 x-java-env: &java-env
+  SERVER_PORT: 8081
   SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
   STORAGE_TYPE: s3
   STORAGE_S3_ENDPOINT: http://localstack:4566
@@ -70,6 +71,91 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
+
+  gateway-sim:
+    build:
+      context: .
+      dockerfile: docker/java-service.Dockerfile
+      args:
+        MODULE: gateway-sim
+    image: recon/gateway-sim:local
+    environment:
+      <<: *java-env
+      BANK_SIM_URL: http://bank-sim:8082
+      JAVA_OPTS: "-Xmx768m -XX:+ExitOnOutOfMemoryError"
+    ports:
+      - "8081:8081"
+    depends_on:
+      kafka: { condition: service_healthy }
+      localstack: { condition: service_healthy }
+      bank-sim: { condition: service_healthy }
+    healthcheck: &java-health
+      test: ["CMD-SHELL", "wget -qO- http://localhost:$${SERVER_PORT:-8080}/actuator/health/readiness | grep -q UP"]
+      interval: 5s
+      timeout: 3s
+      retries: 40
+      start_period: 20s
+
+  bank-sim:
+    build:
+      context: .
+      dockerfile: docker/java-service.Dockerfile
+      args:
+        MODULE: bank-sim
+    image: recon/bank-sim:local
+    environment:
+      <<: *java-env
+      SERVER_PORT: 8082
+      JAVA_OPTS: "-Xmx1g -XX:+ExitOnOutOfMemoryError"
+    ports:
+      - "8082:8082"
+    depends_on:
+      localstack: { condition: service_healthy }
+    healthcheck: *java-health
+
+  recon-service:
+    build:
+      context: .
+      dockerfile: docker/java-service.Dockerfile
+      args:
+        MODULE: recon-service
+    image: recon/recon-service:local
+    environment:
+      <<: *java-env
+      SERVER_PORT: 8080
+      DB_HOST: postgres
+      DB_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:?copy .env.example to .env}
+      POSTGRES_USER: ${POSTGRES_USER:?copy .env.example to .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?copy .env.example to .env}
+      JWT_SECRET: ${JWT_SECRET:?copy .env.example to .env}
+      DEMO_ANALYST_PASSWORD: ${DEMO_ANALYST_PASSWORD:?copy .env.example to .env}
+      DEMO_SUPERVISOR_PASSWORD: ${DEMO_SUPERVISOR_PASSWORD:?copy .env.example to .env}
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:?copy .env.example to .env}
+      GATEWAY_SIM_URL: http://gateway-sim:8081
+      BANK_SOAP_URL: http://bank-sim:8082/ws
+      JAVA_OPTS: "-Xmx1536m -XX:+ExitOnOutOfMemoryError"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      localstack: { condition: service_healthy }
+    healthcheck: *java-health
+
+  web:
+    build:
+      context: ./web
+    image: recon/web:local
+    ports:
+      - "3000:80"
+    depends_on:
+      recon-service: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/healthz | grep -q ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
 volumes:
   pgdata:
