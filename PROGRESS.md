@@ -38,10 +38,26 @@ Working log so the build can be resumed. Every "done" item was run locally on ma
   gateway / bank side by side + assign/comment/resolve/approve/SOAP check, simulator panel with
   ground-truth table). Recharts. Verified: 37 Jest + RTL tests pass, tsc clean, vite build OK.
 
+- Phase 7: scripts/benchmark.sh, 14 days x 100,000 payments/day through the real simulators, Kafka,
+  LocalStack and the API (services as host JVMs, infra in Docker). Raw JSON in docs/benchmarks/.
+  1.4M payments; reconcile 38.3 s at p=1 vs 16.9 s at p=8; identical digests p1 / p8 / re-run;
+  ground truth precision 0.99995 / recall 0.99997 (4 mismatches = one fallback amount collision,
+  explained in BENCHMARKS.md). V3 migration adds fallback indexes.
+- Phase 8: multi-stage Dockerfiles (Java services + web/nginx), full docker-compose (7 services all
+  healthy), scripts (demo, seed, ground-truth, benchmark, health-check, log-check), Terraform for
+  LocalStack S3 (init/validate/plan only: 5 to add, never applied), k8s kustomize manifests (render
+  verified with kubectl kustomize), GitHub Actions workflow. Verified: `docker compose up -d --build`
+  -> health-check.sh exit 0; demo.sh end to end in 8.5 s; ground-truth.sh on compose 7x20k -> 1.0/1.0.
+
 ## Next
-- Phase 7: scale benchmark (14 x 100k), plus re-check of ground-truth / concurrency suites.
+- Phase 8b: try k8s on kind (kind binary download from GitHub keeps failing here).
+- Phase 9: docs, screenshots (Playwright), push to GitHub, CI green.
 
 ## Known issues
+- A recon-service restart makes the new consumers wait up to the Kafka session timeout (45 s) for
+  the old group members to expire before the ledger resumes.
+- An idempotent re-run is slower than the first run on clean tables (34 s vs 17 s at 1.4M entities):
+  it deletes/re-inserts recon_result rows and touches every existing exception's last_run_id.
 - (fixed) @KafkaListener(id=...) silently used the listener id as consumer group; the group is now
   set explicitly. The redelivery test replays the topic from offset 0 with a separate consumer.
 - Postgres is published on host port 5433 (5432 is often taken by a local Postgres).
