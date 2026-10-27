@@ -128,6 +128,8 @@
                 <configuration>
                     <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                     <trimStackTrace>false</trimStackTrace>
+                    <!-- same order everywhere; the ITs share one Kafka topic and must not depend on order -->
+                    <runOrder>alphabetical</runOrder>
                 </configuration>
             </plugin>
         </plugins>

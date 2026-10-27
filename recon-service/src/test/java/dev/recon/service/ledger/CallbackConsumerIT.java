@@ -6,6 +6,7 @@ import dev.recon.service.support.IntegrationTestBase;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,7 +72,7 @@ class CallbackConsumerIT extends IntegrationTestBase {
         send(dup);
         send(ev(c, "SUCCESS", 30));   // timeout-then-success: newest first...
         send(ev(c, "PENDING", 0));    // ...then the stale PENDING arrives
-        kafka.send(GatewayCallback.TOPIC, "bad", "{not json").get(10, TimeUnit.SECONDS);
+        kafka.send(GatewayCallback.TOPIC, run + "-bad", "{not json").get(10, TimeUnit.SECONDS);
 
         await().atMost(Duration.ofSeconds(30)).until(() -> count("processed_event") == 4
                 && count("duplicate_delivery") == 2);
@@ -121,18 +122,26 @@ class CallbackConsumerIT extends IntegrationTestBase {
         assertThat(ledger(e.paymentId())).containsEntry("duplicate_deliveries", 1);
     }
 
+    /** Reads the whole topic up to its current end and keeps this test's records (other tests share the topic). */
     private List<ConsumerRecord<String, String>> readAllFromBeginning() {
         Map<String, Object> props = Map.of(
                 ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KAFKA.getBootstrapServers(),
-                ConsumerConfig.GROUP_ID_CONFIG, "replay-" + run,
-                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest",
-                ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+                ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false,
+                ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 5_000);
         List<ConsumerRecord<String, String>> out = new ArrayList<>();
         try (KafkaConsumer<String, String> c = new KafkaConsumer<>(props, new StringDeserializer(), new StringDeserializer())) {
-            c.subscribe(List.of(GatewayCallback.TOPIC));
-            long deadline = System.currentTimeMillis() + 20_000;
-            while (out.size() < 7 && System.currentTimeMillis() < deadline) {
-                c.poll(Duration.ofMillis(500)).forEach(out::add);
+            List<TopicPartition> parts = c.partitionsFor(GatewayCallback.TOPIC).stream()
+                    .map(p -> new TopicPartition(p.topic(), p.partition())).toList();
+            c.assign(parts);
+            c.seekToBeginning(parts);
+            Map<TopicPartition, Long> end = c.endOffsets(parts);
+            long deadline = System.currentTimeMillis() + 60_000;
+            while (parts.stream().anyMatch(tp -> c.position(tp) < end.get(tp)) && System.currentTimeMillis() < deadline) {
+                c.poll(Duration.ofMillis(500)).forEach(r -> {
+                    if (r.key() != null && r.key().startsWith(run)) {
+                        out.add(r);
+                    }
+                });
             }
         }
         return out;
