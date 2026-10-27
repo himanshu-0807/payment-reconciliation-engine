@@ -33,3 +33,4 @@ data/
 logs/
 *.log
 bench-results/
+docs/video/raw/
