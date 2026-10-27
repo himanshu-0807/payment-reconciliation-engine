@@ -94,8 +94,13 @@ public class SimulatorController {
     @PostMapping("/admin/reset")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Clear ledger, sources, results and queue (audit log is kept)")
-    public void reset(@AuthenticationPrincipal Jwt jwt) {
-        reset.resetAll(jwt.getSubject());
+    @Operation(summary = "Clear ledger, sources, results and queue (scope=all), or only results and queue "
+            + "(scope=results). The audit log is always kept.")
+    public void reset(@RequestParam(defaultValue = "all") String scope, @AuthenticationPrincipal Jwt jwt) {
+        switch (scope) {
+            case "all" -> reset.resetAll(jwt.getSubject());
+            case "results" -> reset.resetResults(jwt.getSubject());
+            default -> throw new IllegalArgumentException("scope must be 'all' or 'results'");
+        }
     }
 }

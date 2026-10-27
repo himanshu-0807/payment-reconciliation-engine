@@ -1,0 +1,61 @@
+{
+  "stamp": "20261027-203227",
+  "commit": "043e835",
+  "host": "Darwin arm64, 10 cpus",
+  "days": 14,
+  "paymentsPerDay": 100000,
+  "seed": 20260901,
+  "simulation": {
+    "ms": 12381,
+    "payments": 1400000,
+    "callbacks": 1420828,
+    "gatewayRows": 1397199,
+    "bankRows": 1400060
+  },
+  "ledger": {
+    "catchUpAfterSimMs": 10385,
+    "simStartToCaughtUpMs": 22766
+  },
+  "ingestion": {
+    "ms": 43067,
+    "files": 33,
+    "rows": 2797259
+  },
+  "reconP1": {
+    "totalMs": 81479,
+    "reconcileMs": 38250,
+    "entities": 1402802,
+    "partitions": 95,
+    "digest": "921b9d495459fec1349384df324c32eae8ef1df303e460898786ecd474b13fc4"
+  },
+  "reconP8": {
+    "totalMs": 16980,
+    "reconcileMs": 16873,
+    "entities": 1402802,
+    "digest": "921b9d495459fec1349384df324c32eae8ef1df303e460898786ecd474b13fc4"
+  },
+  "rerunP8": {
+    "totalMs": 34199,
+    "reconcileMs": 34042,
+    "exceptionsCreated": 0,
+    "digest": "921b9d495459fec1349384df324c32eae8ef1df303e460898786ecd474b13fc4"
+  },
+  "digestsIdentical": true,
+  "groundTruth": {
+    "ms": 1259,
+    "precision": 0.999948921607437,
+    "recall": 0.9999744601514513,
+    "injectedFaults": 78309,
+    "entities": 1402802,
+    "mismatches": 4
+  },
+  "peakMemoryMiB": {
+    "container:recon-kafka-1": 855,
+    "container:recon-localstack-1": 472,
+    "container:recon-postgres-1": 771,
+    "jvm-rss:bank-sim.jar": 963,
+    "jvm-rss:gateway-sim.jar": 676,
+    "jvm-rss:recon-service.jar": 941,
+    "recon-service-heap-used": 767
+  }
+}

@@ -26,4 +26,11 @@ public class DataReset {
                 + "recon_result, adjustment_journal, exception_comment, recon_exception, recon_run");
         audit.record(actor, "DATA_RESET", "SYSTEM", "all", "ledger, sources, results and ops queue cleared");
     }
+
+    /** Clears results and the ops queue but keeps the ledger and ingested sources (used by benchmarks). */
+    @Transactional
+    public void resetResults(String actor) {
+        jdbc.execute("TRUNCATE recon_result, adjustment_journal, exception_comment, recon_exception, recon_run");
+        audit.record(actor, "RESULTS_RESET", "SYSTEM", "results", "results and ops queue cleared; ledger and sources kept");
+    }
 }

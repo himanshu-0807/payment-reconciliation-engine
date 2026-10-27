@@ -1,0 +1,16 @@
+20:41:43   simulation: day 0/7
+{"runId":10,"entities":140280,"partitions":60,"durationMs":2343,"digest":"abe23f93587301d3481003f0c98513339f258a022cf5f3d990270a052f2f95d0"}
+sim sim-42-ae6d2acc: 140280 entities, 7762 injected faults
+overall precision 1.0  recall 1.0  unmapped outcomes 0
+  AMOUNT_MISMATCH_FEE	injected=1383	detected=1383	precision=1.0	recall=1.0
+  AMOUNT_MISMATCH_REAL	injected=410	detected=410	precision=1.0	recall=1.0
+  BANK_UTR_MISSING	injected=422	detected=422	precision=1.0	recall=1.0
+  DELAYED_SETTLEMENT	injected=1304	detected=1304	precision=1.0	recall=1.0
+  DUPLICATE_BANK_CREDIT	injected=410	detected=410	precision=1.0	recall=1.0
+  DUPLICATE_CALLBACK	injected=1416	detected=1416	precision=1.0	recall=1.0
+  MISSING_BANK_RECORD	injected=413	detected=413	precision=1.0	recall=1.0
+  MISSING_CALLBACK	injected=721	detected=721	precision=1.0	recall=1.0
+  MISSING_GATEWAY_RECORD	injected=282	detected=282	precision=1.0	recall=1.0
+  ORPHAN_BANK_CREDIT	injected=280	detected=280	precision=1.0	recall=1.0
+  TIMEOUT_THEN_SUCCESS	injected=721	detected=721	precision=1.0	recall=1.0
+no mismatches
