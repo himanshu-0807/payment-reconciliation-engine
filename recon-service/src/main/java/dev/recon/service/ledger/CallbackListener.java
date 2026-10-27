@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class CallbackListener {
 
     private static final Logger log = LoggerFactory.getLogger(CallbackListener.class);
+    /** Set explicitly: by default Spring Kafka would use the listener id as the group id. */
+    public static final String GROUP_ID = "recon-ledger";
 
     private final CallbackBatchProcessor processor;
     private final AtomicLong applied = new AtomicLong();
@@ -24,7 +26,7 @@ public class CallbackListener {
         this.processor = processor;
     }
 
-    @KafkaListener(id = "ledger-callbacks", topics = GatewayCallback.TOPIC, batch = "true",
+    @KafkaListener(id = "ledger-callbacks", groupId = CallbackListener.GROUP_ID, topics = GatewayCallback.TOPIC, batch = "true",
             concurrency = "${recon.ledger.consumer-concurrency:3}")
     public void onBatch(List<ConsumerRecord<String, String>> records) {
         CallbackBatchProcessor.Result r = processor.process(records);

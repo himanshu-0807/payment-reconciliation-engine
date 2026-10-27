@@ -19,11 +19,18 @@ Working log so the build can be resumed. Every "done" item was run locally on ma
   files, 8 bank files, ground truth; row counts reconcile with the injected faults; SOAP call via
   curl returns CREDITED. BankSimulatorTest (statements + SOAP via MockWebServiceClient) passes.
 
+- Phase 4: idempotent ingestion (file checksum + row natural keys), pure Classifier with documented
+  precedence, PartitionReconciler (key match + mutual-unique fallback), ReconEngine on a bounded
+  pool with per-partition transactions and a SHA-256 run digest, auto-fix rules, exception sync,
+  ground-truth evaluator. Verified: ClassifierTest (32), AutoFixRulesTest (17), IngestionIT (2),
+  ReconEngineIT (4: ground truth precision=recall=1.0 on 12,048 entities; re-run unchanged;
+  parallelism 1 vs 8 identical digest + queue; PENDING_EXPECTED -> escalation lifecycle).
+
 ## Next
-- Phase 4: ingestion of the three sources and the reconciliation engine with classification.
+- Phase 5: JWT security, REST API (exceptions, actions, dashboard, audit, simulator proxy), SOAP
+  client to bank-sim, OpenAPI, consistent error format.
 
 ## Known issues
-- Stopping and restarting the Spring listener container in-process did not resume fetching after an
-  external offset reset in a test; the redelivery test therefore replays the topic from offset 0
-  with a separate consumer and feeds the real records through the same processor.
+- (fixed) @KafkaListener(id=...) silently used the listener id as consumer group; the group is now
+  set explicitly. The redelivery test replays the topic from offset 0 with a separate consumer.
 - Postgres is published on host port 5433 (5432 is often taken by a local Postgres).
