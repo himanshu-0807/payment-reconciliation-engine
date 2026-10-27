@@ -26,9 +26,15 @@ Working log so the build can be resumed. Every "done" item was run locally on ma
   ReconEngineIT (4: ground truth precision=recall=1.0 on 12,048 entities; re-run unchanged;
   parallelism 1 vs 8 identical digest + queue; PENDING_EXPECTED -> escalation lifecycle).
 
+- Phase 5: JWT (HS256) security with OPS_ANALYST / OPS_SUPERVISOR / ADMIN, seeded demo users,
+  REST API (runs, exceptions with filters/paging, detail side by side, assign/comment/resolve,
+  adjustment approval, dashboard summary + 14-day trend, audit, simulator proxy, ground-truth
+  evaluation, reset), RFC 7807 errors, OpenAPI/Swagger, SOAP client to bank-sim. Verified: ApiIT (9);
+  live run of the 3 jars on compose infra: 5 days x 5000 payments, recon p=8 in 773 ms,
+  ground truth precision=recall=1.0 (1407 injected faults, 25,050 entities), SOAP lookup via API.
+
 ## Next
-- Phase 5: JWT security, REST API (exceptions, actions, dashboard, audit, simulator proxy), SOAP
-  client to bank-sim, OpenAPI, consistent error format.
+- Phase 6: React + TypeScript dashboard with Jest + RTL tests.
 
 ## Known issues
 - (fixed) @KafkaListener(id=...) silently used the listener id as consumer group; the group is now

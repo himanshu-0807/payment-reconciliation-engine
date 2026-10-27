@@ -79,7 +79,7 @@ public class GatewaySimulator {
         runs.put(id, status);
         active.set(id);
         SimRunRequest bankRequest = new SimRunRequest(config.seed(), config.startDate(), config.days(),
-                config.paymentsPerDay(), config.merchants(), config.faultRates(), id);
+                config.paymentsPerDay(), config.merchants(), config.faultRates(), id, request.bankCutoffDate());
         executor.submit(() -> execute(id, config, bankRequest));
         return status;
     }

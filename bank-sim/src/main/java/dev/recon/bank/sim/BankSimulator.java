@@ -60,6 +60,8 @@ public class BankSimulator {
         TreeMap<LocalDate, List<BankStatementRow>> pending = new TreeMap<>();
         Map<String, UtrInfo> index = new HashMap<>();
         LocalDate firstFile = config.startDate().plusDays(1);
+        LocalDate lastFile = request.bankCutoffDate() != null && request.bankCutoffDate().isBefore(config.lastBankDate())
+                ? request.bankCutoffDate() : config.lastBankDate();
         int files = 0;
         long rows = 0;
         for (int d = 0; d < config.days(); d++) {
@@ -71,11 +73,13 @@ public class BankSimulator {
             LocalDate complete = date.plusDays(1);
             while (!pending.isEmpty() && !pending.firstKey().isAfter(complete)) {
                 var e = pending.pollFirstEntry();
-                rows += writeStatement(e.getKey(), e.getValue(), index);
-                files++;
+                if (!e.getKey().isAfter(lastFile)) {
+                    rows += writeStatement(e.getKey(), e.getValue(), index);
+                    files++;
+                }
             }
         }
-        for (LocalDate v = firstFile; !v.isAfter(config.lastBankDate()); v = v.plusDays(1)) {
+        for (LocalDate v = firstFile; !v.isAfter(lastFile); v = v.plusDays(1)) {
             if (!store.exists(ObjectKeys.bankFile(v))) {
                 List<BankStatementRow> list = pending.remove(v);
                 rows += writeStatement(v, list == null ? new ArrayList<>() : list, index);
